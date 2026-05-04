@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+PET_DIR="$HOME/ghostty-pet"
+SHELL_BIN="${SHELL:-/bin/zsh}"
+PY="/usr/local/bin/python3"
+PET="$PET_DIR/pet.png"
+
+cd "$PET_DIR" || exec "$SHELL_BIN" -l
+
+if [ -x "$PY" ] && [ -f "$PET" ]; then
+  "$PY" "$PET_DIR/ghostpet.py" "$PET" \
+    --splash-seconds 5 \
+    --exit-any-key
+fi
+
+exec "$SHELL_BIN" -l
