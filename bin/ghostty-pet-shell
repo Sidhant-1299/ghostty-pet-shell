@@ -1,16 +1,92 @@
 #!/usr/bin/env bash
 
-PET_DIR="$HOME/ghostty-pet"
-SHELL_BIN="${SHELL:-/bin/zsh}"
-PY="/usr/local/bin/python3"
-PET="$PET_DIR/pet.png"
+set -u
 
-cd "$PET_DIR" || exec "$SHELL_BIN" -l
+CONFIG="${GHOSTTY_PET_CONFIG:-$HOME/.config/ghostty-pet/config}"
 
-if [ -x "$PY" ] && [ -f "$PET" ]; then
-  "$PY" "$PET_DIR/ghostpet.py" "$PET" \
-    --splash-seconds 5 \
-    --exit-any-key
+if [ -f "$CONFIG" ]; then
+  # shellcheck disable=SC1090
+  source "$CONFIG"
+else
+  GHOSTTY_PET_HOME="${GHOSTTY_PET_HOME:-$HOME/.local/share/ghostty-pet}"
+  PET_IMAGE="$GHOSTTY_PET_HOME/assets/pet.png"
+  PYTHON_BIN="$(command -v python3)"
+  SHELL_BIN="${SHELL:-/bin/zsh}"
+
+  SPLASH_SECONDS="5"
+  EXIT_ANY_KEY="1"
+
+  SHEET_COLS="4"
+  SHEET_ROWS="2"
+
+  FPS="7"
+  CELL_COLS="12"
+  CELL_ROWS="8"
+  PIXEL_WIDTH="150"
+  TRANSPARENT_THRESHOLD="245"
+
+  DEBUG="0"
 fi
 
-exec "$SHELL_BIN" -l
+if [ "${DEBUG:-0}" = "1" ]; then
+  mkdir -p "$HOME/.config/ghostty-pet"
+
+  {
+    echo "==== ghostty-pet debug ===="
+    date
+    echo "CONFIG=$CONFIG"
+    echo "GHOSTTY_PET_HOME=${GHOSTTY_PET_HOME:-}"
+    echo "PET_IMAGE=${PET_IMAGE:-}"
+    echo "PYTHON_BIN=${PYTHON_BIN:-}"
+    echo "SHELL_BIN=${SHELL_BIN:-}"
+    echo "PATH=$PATH"
+
+    if [ -n "${PYTHON_BIN:-}" ] && [ -x "$PYTHON_BIN" ]; then
+      "$PYTHON_BIN" -c "import sys; print('python:', sys.executable)"
+      "$PYTHON_BIN" -c "import PIL; print('PIL:', PIL.__file__)"
+    fi
+
+    echo
+  } >> "$HOME/.config/ghostty-pet/debug.log" 2>&1
+fi
+
+if [ -z "${PYTHON_BIN:-}" ] || [ ! -x "$PYTHON_BIN" ]; then
+  echo "ghostty-pet: invalid PYTHON_BIN: ${PYTHON_BIN:-unset}" >&2
+  exec "${SHELL_BIN:-/bin/zsh}" -l
+fi
+
+if [ -z "${PET_IMAGE:-}" ] || [ ! -f "$PET_IMAGE" ]; then
+  echo "ghostty-pet: pet image not found: ${PET_IMAGE:-unset}" >&2
+  exec "${SHELL_BIN:-/bin/zsh}" -l
+fi
+
+RENDERER="${GHOSTTY_PET_HOME:-$HOME/.local/share/ghostty-pet}/ghostty_pet/renderer.py"
+
+if [ ! -f "$RENDERER" ]; then
+  echo "ghostty-pet: renderer not found: $RENDERER" >&2
+  exec "${SHELL_BIN:-/bin/zsh}" -l
+fi
+
+ARGS=(
+  "$RENDERER"
+  "$PET_IMAGE"
+  "--cols" "${SHEET_COLS:-4}"
+  "--rows" "${SHEET_ROWS:-2}"
+  "--fps" "${FPS:-7}"
+  "--cell-cols" "${CELL_COLS:-12}"
+  "--cell-rows" "${CELL_ROWS:-8}"
+  "--pixel-width" "${PIXEL_WIDTH:-150}"
+  "--transparent-threshold" "${TRANSPARENT_THRESHOLD:-245}"
+)
+
+if [ -n "${SPLASH_SECONDS:-}" ]; then
+  ARGS+=("--splash-seconds" "$SPLASH_SECONDS")
+fi
+
+if [ "${EXIT_ANY_KEY:-1}" = "1" ]; then
+  ARGS+=("--exit-any-key")
+fi
+
+"$PYTHON_BIN" "${ARGS[@]}"
+
+exec "${SHELL_BIN:-/bin/zsh}" -l
