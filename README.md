@@ -216,7 +216,7 @@ That is why the installer pins the exact Python path in config.
 Clone the repo:
 
 ```bash
-git clone https://github.com/YOUR_USERNAME/ghostty-terminal-pet.git
+git clone https://github.com/Sidhant-1299/ghostty-pet-shell.git
 cd ghostty-terminal-pet
 ```
 
