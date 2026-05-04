@@ -681,6 +681,62 @@ CELL_COLS="14"
 CELL_ROWS="10"
 ```
 
+---
+## Randomly choosing between multiple pets
+
+You can keep multiple sprite sheets in your Ghostty Pet config directory and randomly choose one every time Ghostty starts.
+
+Example directory:
+
+```bash
+~/.config/ghostty-pet/
+├── config
+├── pet.png
+├── pet1.png
+├── pet2.png
+└── pet3.png
+```
+
+Instead of setting one fixed pet image like this:
+
+```bash
+PET_IMAGE="$HOME/.config/ghostty-pet/pet.png"
+```
+
+You can define a pool of pets like this: 
+
+```bash
+PET_POOL=(
+  "$HOME/.config/ghostty-pet/pet.png"
+  "$HOME/.config/ghostty-pet/pet1.png"
+  "$HOME/.config/ghostty-pet/pet2.png"
+  "$HOME/.config/ghostty-pet/pet3.png"
+)
+
+PET_IMAGE="${PET_POOL[$((RANDOM % ${#PET_POOL[@]}))]}"
+```
+
+Now every time ghostty-pet-shell runs, one sprite sheet is selected randomly.
+This works because ~/.config/ghostty-pet/config is a Bash config file that gets sourced by the launcher.
+
+### IMPORTANT NOTE
+
+Important note
+
+All randomly selected pets should use the same sprite sheet layout.
+
+For example, if your config says:
+```bash
+SHEET_COLS="4"
+SHEET_ROWS="2"
+```
+
+then every pet image in the pool should be a 4 by 2 sprite sheet.
+
+If one pet uses a different layout, create a separate config or update the launcher logic to support per-pet settings.
+
+---
+
 ## Uninstall
 
 Remove the installed files:
